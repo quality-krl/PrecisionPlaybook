@@ -1,32 +1,20 @@
- (() => {
+(() => {
   const html = document.documentElement;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const prefersReduced = (() => {
-    try {
-      return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    } catch {
-      return false;
-    }
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+    catch { return false; }
   })();
 
   const storage = {
-    get(key) {
-      try {
-        return localStorage.getItem(key);
-      } catch {
-        return null;
-      }
-    },
-    set(key, val) {
-      try {
-        localStorage.setItem(key, val);
-      } catch {}
-    }
+    get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+    set(key, val) { try { localStorage.setItem(key, val); } catch {} }
   };
 
+  // ---------- Language ----------
   const setLangAttrs = (lang) => {
     const next = lang === "en" ? "en" : "he";
     html.dataset.lang = next;
@@ -35,6 +23,7 @@
   };
 
   const swapText = (lang) => {
+    // Swaps all bilingual text nodes
     $$("[data-he],[data-en]").forEach((el) => {
       const v = lang === "en" ? el.getAttribute("data-en") : el.getAttribute("data-he");
       if (v != null) el.textContent = v;
@@ -45,13 +34,31 @@
     const symptom = $("#symptom");
     const env = $("#env");
     if (symptom) symptom.placeholder = lang === "en" ? "What exactly do you see?" : "מה בדיוק אתה רואה?";
-    if (env) env.placeholder = lang === "en" ? "iPhone 12 Pro • iOS • Safari • App version" : "אייפון 12 פרו • iOS • ספארי • גרסת אפליקציה";
+    if (env) env.placeholder = lang === "en"
+      ? "iPhone 12 Pro • iOS • Safari • App version"
+      : "אייפון 12 פרו • iOS • ספארי • גרסת אפליקציה";
+  };
+
+  const ensureTogglePulseSpan = () => {
+    const btn = $("[data-lang-toggle]");
+    if (!btn) return;
+    if (btn.querySelector(".lang__pulse")) return;
+
+    const pulse = document.createElement("span");
+    pulse.className = "lang__pulse";
+    pulse.setAttribute("aria-hidden", "true");
+    btn.prepend(pulse);
   };
 
   const setToggleState = (lang) => {
     const btn = $("[data-lang-toggle]");
     if (!btn) return;
-    btn.setAttribute("aria-pressed", lang === "en" ? "true" : "false");
+
+    const isEn = lang === "en";
+    btn.setAttribute("aria-pressed", isEn ? "true" : "false");
+
+    btn.classList.add("is-clicked");
+    window.setTimeout(() => btn.classList.remove("is-clicked"), 180);
   };
 
   const announceLang = () => {
@@ -68,29 +75,47 @@
     announceLang();
   };
 
+  let flipLock = false;
+  let t1 = null, t2 = null;
+
   const flipTo = (lang) => {
+    if (flipLock) return;
+    flipLock = true;
+
+    if (t1) window.clearTimeout(t1);
+    if (t2) window.clearTimeout(t2);
+
     if (prefersReduced) {
       applyLang(lang);
+      flipLock = false;
       return;
     }
 
     html.dataset.flipping = "1";
 
-    window.setTimeout(() => {
+    t1 = window.setTimeout(() => {
       applyLang(lang);
     }, 340);
 
-    window.setTimeout(() => {
+    t2 = window.setTimeout(() => {
       delete html.dataset.flipping;
+      flipLock = false;
     }, 780);
   };
 
   const initLanguage = () => {
+    ensureTogglePulseSpan();
+
     const saved = storage.get("krl_lang");
     applyLang(saved === "en" ? "en" : "he");
 
     const btn = $("[data-lang-toggle]");
     if (!btn) return;
+
+    btn.addEventListener("pointerdown", () => btn.classList.add("is-pressing"));
+    btn.addEventListener("pointerup", () => btn.classList.remove("is-pressing"));
+    btn.addEventListener("pointercancel", () => btn.classList.remove("is-pressing"));
+    btn.addEventListener("mouseleave", () => btn.classList.remove("is-pressing"));
 
     btn.addEventListener("click", () => {
       const current = html.dataset.lang === "en" ? "en" : "he";
@@ -98,6 +123,7 @@
     });
   };
 
+  // ---------- Smooth anchors ----------
   const initSmoothAnchors = () => {
     if (prefersReduced) return;
 
@@ -116,62 +142,41 @@
     });
   };
 
+  // ---------- Video auto play/pause ----------
   const initVideo = () => {
     const v = $("[data-hero-video]");
     if (!v) return;
 
     if (prefersReduced) {
-      try {
-        v.pause();
-      } catch {}
+      try { v.pause(); } catch {}
       return;
     }
 
     const tryPlay = async () => {
-      try {
-        await v.play();
-      } catch {}
+      try { await v.play(); } catch {}
     };
 
     if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver(
-        (entries) => {
-          const ent = entries[0];
-          if (!ent) return;
-          if (ent.isIntersecting) tryPlay();
-          else {
-            try {
-              v.pause();
-            } catch {}
-          }
-        },
-        { threshold: 0.35 }
-      );
+      const io = new IntersectionObserver((entries) => {
+        const ent = entries[0];
+        if (!ent) return;
+        if (ent.isIntersecting) tryPlay();
+        else { try { v.pause(); } catch {} }
+      }, { threshold: 0.35 });
+
       io.observe(v);
     } else {
       tryPlay();
     }
   };
 
+  // ---------- Protocol generator ----------
   const normalize = (s) => String(s || "").replace(/\r\n/g, "\n").trim();
 
   const sceneLabel = (lang, scene) => {
-    const he = {
-      login: "התחברות",
-      checkout: "תשלום",
-      calendar: "לוח שנה",
-      upload: "העלאת קובץ",
-      lang: "החלפת שפה"
-    };
-    const en = {
-      login: "Login",
-      checkout: "Checkout",
-      calendar: "Calendar",
-      upload: "File upload",
-      lang: "Language switch"
-    };
-    const map = lang === "en" ? en : he;
-    return map[scene] || scene;
+    const he = { login:"התחברות", checkout:"תשלום", calendar:"לוח שנה", upload:"העלאת קובץ", lang:"החלפת שפה" };
+    const en = { login:"Login", checkout:"Checkout", calendar:"Calendar", upload:"File upload", lang:"Language switch" };
+    return (lang === "en" ? en : he)[scene] || scene;
   };
 
   const protocolText = (lang, scene, symptom, env) => {
@@ -234,7 +239,7 @@
       "1) רעיון לטסט רגרסיה",
       "2) הצעת ניטור/לוגים",
       "3) הצעת ולידציה/Assertion",
-      "4) Definition of Done: קריטריוני מעבר"
+      "4) קריטריוני מעבר (Definition of Done)"
     ].join("\n");
   };
 
@@ -253,32 +258,31 @@
 
     const render = () => {
       const lang = html.dataset.lang === "en" ? "en" : "he";
-      const text = protocolText(lang, scene ? scene.value : "login", symptom ? symptom.value : "", env ? env.value : "");
+      const text = protocolText(
+        lang,
+        scene ? scene.value : "login",
+        symptom ? symptom.value : "",
+        env ? env.value : ""
+      );
       if (out) out.textContent = text;
       return text;
     };
 
     const copyText = async (text) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch {
-        return false;
-      }
+      try { await navigator.clipboard.writeText(text); return true; }
+      catch { return false; }
     };
 
     const flashBtn = (btn, he, en) => {
       if (!btn) return;
       const prev = btn.textContent;
       btn.textContent = html.dataset.lang === "en" ? en : he;
-      window.setTimeout(() => {
-        btn.textContent = prev;
-      }, 900);
+      window.setTimeout(() => { btn.textContent = prev; }, 900);
     };
 
     render();
 
-    if (btnGen) btnGen.addEventListener("click", () => render());
+    if (btnGen) btnGen.addEventListener("click", render);
 
     if (btnReset) {
       btnReset.addEventListener("click", () => {
@@ -291,7 +295,7 @@
 
     if (btnCopy) {
       btnCopy.addEventListener("click", async () => {
-        const text = out && out.textContent ? out.textContent : render();
+        const text = (out && out.textContent) ? out.textContent : render();
         const ok = await copyText(text);
         if (ok) flashBtn(btnCopy, "הועתק", "Copied");
       });
@@ -302,11 +306,13 @@
     if (env) env.addEventListener("input", render);
 
     document.addEventListener("krl:langChanged", () => {
-      setInputPlaceholders(html.dataset.lang === "en" ? "en" : "he");
+      const lang = html.dataset.lang === "en" ? "en" : "he";
+      setInputPlaceholders(lang);
       render();
     });
   };
 
+  // ---------- Boot ----------
   const boot = () => {
     initLanguage();
     initSmoothAnchors();
