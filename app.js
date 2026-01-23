@@ -15,6 +15,8 @@
   };
 
   // ---------- Language ----------
+  const DEFAULT_LANG = "he"; // ALWAYS start in Hebrew
+
   const setLangAttrs = (lang) => {
     const next = lang === "en" ? "en" : "he";
     html.dataset.lang = next;
@@ -23,7 +25,6 @@
   };
 
   const swapText = (lang) => {
-    // Swaps all bilingual text nodes
     $$("[data-he],[data-en]").forEach((el) => {
       const v = lang === "en" ? el.getAttribute("data-en") : el.getAttribute("data-he");
       if (v != null) el.textContent = v;
@@ -65,13 +66,13 @@
     document.dispatchEvent(new CustomEvent("krl:langChanged"));
   };
 
-  const applyLang = (lang) => {
+  const applyLang = (lang, { persist = true } = {}) => {
     const next = lang === "en" ? "en" : "he";
     setLangAttrs(next);
     swapText(next);
     setInputPlaceholders(next);
     setToggleState(next);
-    storage.set("krl_lang", next);
+    if (persist) storage.set("krl_lang", next);
     announceLang();
   };
 
@@ -106,8 +107,8 @@
   const initLanguage = () => {
     ensureTogglePulseSpan();
 
-    const saved = storage.get("krl_lang");
-    applyLang(saved === "en" ? "en" : "he");
+    // Force Hebrew first every time (and overwrite any old saved "en")
+    applyLang(DEFAULT_LANG, { persist: true });
 
     const btn = $("[data-lang-toggle]");
     if (!btn) return;
