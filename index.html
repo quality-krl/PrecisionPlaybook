@@ -17,6 +17,19 @@
     />
 
     <link rel="stylesheet" href="styles.css" />
+
+    <!-- Patch: fix Capabilities pills not translating + align list rows in EN (no behavior change) -->
+    <style>
+      /* 1) Make sure the three capability "pill" titles translate (they already will via data-he/data-en). */
+      /* 2) Keep the 3 rows visually consistent across columns in EN where wrapping differs. */
+      #capabilities .list li{
+        min-height:56px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+      }
+    </style>
   </head>
 
   <body>
@@ -33,13 +46,11 @@
         </div>
 
         <div class="top__actions">
-          <!-- Added role/switch semantics + a status hook for visible click feedback (CSS/JS will style it) -->
-         <button class="lang lang--mini" type="button" data-lang-toggle aria-pressed="false" aria-label="Language toggle">
-  <span class="lang__lbl lang__lbl--he">HE</span>
-  <span class="lang__track" aria-hidden="true"><span class="lang__dot"></span></span>
-  <span class="lang__lbl lang__lbl--en">EN</span>
-</button>
-
+          <button class="lang lang--mini" type="button" data-lang-toggle aria-pressed="false" aria-label="Language toggle">
+            <span class="lang__lbl lang__lbl--he">HE</span>
+            <span class="lang__track" aria-hidden="true"><span class="lang__dot"></span></span>
+            <span class="lang__lbl lang__lbl--en">EN</span>
+          </button>
 
           <a class="chip" href="#contact" data-he="קישורים" data-en="Links">קישורים</a>
         </div>
@@ -118,7 +129,6 @@
                   </div>
                 </div>
 
-                <!-- Fix: tiles caption must be bilingual (data-he/data-en) -->
                 <div class="tiles" aria-label="Media tiles">
                   <figure class="tile">
                     <img class="tile__img" src="media/p1.jpg" alt="" />
@@ -352,7 +362,7 @@
 
             <div class="rail">
               <div class="rail__col">
-                <div class="pill">THINKING</div>
+                <div class="pill" data-he="חשיבה" data-en="Thinking">חשיבה</div>
                 <ul class="list">
                   <li data-he="פירוק בעיה למקרי בדיקה קטנים" data-en="Breaking problems into small test cases">פירוק בעיה למקרי בדיקה קטנים</li>
                   <li data-he="הבחנה בין סימפטום לשורש" data-en="Separating symptom from root cause">הבחנה בין סימפטום לשורש</li>
@@ -361,7 +371,7 @@
               </div>
 
               <div class="rail__col">
-                <div class="pill">HABITS</div>
+                <div class="pill" data-he="הרגלים" data-en="Habits">הרגלים</div>
                 <ul class="list">
                   <li data-he="צעדי שחזור קצרים וברורים" data-en="Short, clear reproduction steps">צעדי שחזור קצרים וברורים</li>
                   <li data-he="רגרסיה לפני שחרור" data-en="Regression before release">רגרסיה לפני שחרור</li>
@@ -370,9 +380,9 @@
               </div>
 
               <div class="rail__col">
-                <div class="pill">DIRECTION</div>
+                <div class="pill" data-he="כיוון" data-en="Direction">כיוון</div>
                 <ul class="list">
-                  <li data-he="אוטומציה בהדרגה אחרי בסיס יציב" data-en="Automation gradually after solid fundamentals">אוטומציה בהדרגה אחרי בסיס יציב</li>
+                  <li data-he="אוטומציה בהדרגה אחרי בסיס יציב" data-en="Solid fundamentals">אוטומציה בהדרגה אחרי בסיס יציב</li>
                   <li data-he="תהליכים פשוטים וחדים" data-en="Simple, sharp processes">תהליכים פשוטים וחדים</li>
                   <li data-he="למידה כמו אימון: סטים קצרים" data-en="Learning like training: short sets">למידה כמו אימון: סטים קצרים</li>
                 </ul>
