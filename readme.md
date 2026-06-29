@@ -45,7 +45,7 @@ Example with VS Code:
 
 - GitHub: https://github.com/quality-krl/PrecisionPlaybook  
 - LinkedIn: https://www.linkedin.com/in/kirill-kovalevski-b6a258257  
-- Email: kirillfield94@gmail.com
+- Email: kirill.kovalevski@mail.huji.ac.il
 
 ## License
 
